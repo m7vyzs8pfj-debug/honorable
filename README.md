@@ -8,15 +8,18 @@ The interface is styled as a sci-fi tournament console set on a fixed, cinematic
 
 - Add, remove, and validate participant names before the first round.
 - Load a ready-made 12-player demo roster.
-- Choose between 1 and 12 rounds.
+- Choose between 1 and 12 rounds before starting the tournament; the setting is locked after round one begins.
 - Generate tables that favor groups of four, then three or five when needed.
 - Re-pair players by their current score after each completed round.
 - Enter scores from 0 to 3 for each player at every table.
 - Track total points, completed rounds, rankings, and the top three players live.
 - Show a final tournament summary, podium, rankings, and booster-prize allocation.
 - Persist the active session in the browser with `localStorage`.
+- Keep a shared player-name database in Postgres, with add, pick, and delete controls.
 - Reset the current session and start a fresh tournament.
 - Responsive layout for desktop and mobile screens.
+- Installable as a PWA, with cached app files and offline tournament control.
+- Twin Suns life counter with 3–5 player layouts, damage tracking, initiative tokens, base selection, round timer, and wake lock support.
 
 ## Run locally
 
@@ -31,6 +34,22 @@ python3 -m http.server 8000
 Then open [http://localhost:8000](http://localhost:8000) in a browser.
 
 Opening `index.html` directly may work in many browsers, but using a local server is the more reliable option.
+
+## Use on a phone
+
+Deploy the app over HTTPS, open it on the phone, and choose **Add to Home Screen** or **Install app** in the browser menu. After the first online visit, the manager, calendar, and life-counter app files are cached for offline use. Tournament rosters, scores, and sessions remain available offline through browser storage. The shared player database needs a connection; names used offline are kept locally on that device.
+
+## Deploy on Vercel
+
+1. Import this repository into Vercel.
+2. In Vercel, open **Marketplace / Storage**, select the Neon database `neon-charcoal-castle`, and connect it to this project. If it is not connected yet, install Neon and select that existing database.
+3. In **Settings → Environment Variables**, confirm that the connection string is available as `DATABASE_URL` for **Production**, **Preview**, and **Development**. `POSTGRES_URL`, `POSTGRES_DATABASE_URL`, and `POSTGRESS_DATABASE_URL` are also supported.
+4. Push to Git. Vercel installs `@neondatabase/serverless` and deploys `api/players.js` as a serverless function automatically.
+5. Open the deployed app and add a player. The function creates its `players` table automatically on first use.
+
+Do not commit the real connection string. For local development, copy `.env.example` to `.env.local` and fill in the pooled Neon connection string. Vercel environment-variable changes apply to new deployments, so redeploy after changing them.
+
+The player database is intentionally public: anyone who can open the app can add or delete names. The active tournament session remains in each browser’s `localStorage`; use **Add** beside a saved name to put it into the current roster after a refresh.
 
 ## How to use
 
@@ -57,6 +76,10 @@ Tables are built around the ideal pod size of four players. The pairing logic al
 | `index.html` | Application markup, typography imports, and theme overrides. |
 | `styles.css` | Main layout, responsive styling, and visual design system. |
 | `app.js` | Session state, table generation, scoring, standings, persistence, and UI behavior. |
+| `life-counter.html` | Full-screen Twin Suns life counter and round controls. |
+| `manifest.webmanifest` | Install metadata and app icons. |
+| `sw.js` | Offline app-shell and runtime caching. |
+| `pwa.js` | Service-worker registration. |
 | `README.md` | Product overview and local development guide. |
 
 ## Technical notes
@@ -64,7 +87,8 @@ Tables are built around the ideal pod size of four players. The pairing logic al
 - Plain HTML, CSS, and JavaScript; there are no runtime dependencies.
 - Google Fonts are loaded from the network for the intended typography. The app remains functional if they are unavailable.
 - Session data is stored under the `holotable-session-v1` key in `localStorage`.
-- The app is currently single-session and client-side only; there is no server, account system, or cross-device synchronization.
+- Tournament session data is still browser-local, while saved player names are shared through the Vercel Postgres API.
+- There is no authentication; database add/delete access is intentionally open as requested.
 
 ## Keeping this document current
 
