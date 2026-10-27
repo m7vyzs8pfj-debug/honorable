@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Star Wars: Unlimited — Twin Suns Tracker</title>
+  <title>Star Wars: Unlimited — Life Counter (Premier &amp; Twin Suns)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -50,11 +50,27 @@
       }
     }
 
-    /* Spelersgrids voor 3, 4 en 5 spelers */
+    /* Spelersgrids voor 2 (1v1 Premier), 3, 4 en 5 spelers (Twin Suns) */
     #playersGrid {
       flex: 1 1 auto;
       min-height: 0;
       width: 100vw;
+    }
+
+    .grid-2p {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 6px;
+      padding: 6px;
+      width: 100%;
+      height: 100%;
+    }
+    @media (orientation: landscape) {
+      .grid-2p {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+      }
     }
 
     .grid-3p {
@@ -556,8 +572,8 @@
     <div class="bg-slate-900 border border-slate-700/90 rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
         <div>
-          <h2 class="sw-font text-base font-extrabold tracking-wider text-amber-400 uppercase">Star Wars: Unlimited — Twin Suns</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Spelinstellingen, Spelduur &amp; Live API Bases</p>
+          <h2 id="menuModalHeaderTitle" class="sw-font text-base font-extrabold tracking-wider text-amber-400 uppercase">Star Wars: Unlimited — Twin Suns</h2>
+          <p id="menuModalHeaderSub" class="text-xs text-slate-400 mt-0.5">Spelinstellingen, Spelduur &amp; Live API Bases</p>
         </div>
         <div class="flex items-center gap-2">
           <button id="toggleTopbarBtn" onclick="toggleTopbarVisibility()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 border border-slate-700">
@@ -612,13 +628,14 @@
           </div>
         </div>
 
-        <!-- AANTAL SPELERS (3, 4 OF 5) -->
+        <!-- AANTAL SPELERS & FORMAT (2P PREMIER OF 3/4/5P TWIN SUNS) -->
         <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
-          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Aantal Spelers aan Tafel</div>
-          <div class="grid grid-cols-3 gap-2.5">
-            <button onclick="setPlayerCount(3)" id="btnCount3" class="py-2.5 rounded-lg font-bold text-xs border transition">3 Spelers</button>
-            <button onclick="setPlayerCount(4)" id="btnCount4" class="py-2.5 rounded-lg font-bold text-xs border transition">4 Spelers</button>
-            <button onclick="setPlayerCount(5)" id="btnCount5" class="py-2.5 rounded-lg font-bold text-xs border transition">5 Spelers</button>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Spelmodus &amp; Aantal Spelers</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button onclick="setPlayerCount(2)" id="btnCount2" class="py-2.5 px-2 rounded-lg font-bold text-xs border transition">2P Premier</button>
+            <button onclick="setPlayerCount(3)" id="btnCount3" class="py-2.5 px-2 rounded-lg font-bold text-xs border transition">3P Twin Suns</button>
+            <button onclick="setPlayerCount(4)" id="btnCount4" class="py-2.5 px-2 rounded-lg font-bold text-xs border transition">4P Twin Suns</button>
+            <button onclick="setPlayerCount(5)" id="btnCount5" class="py-2.5 px-2 rounded-lg font-bold text-xs border transition">5P Twin Suns</button>
           </div>
         </div>
 
@@ -721,8 +738,6 @@
       Neutral:    { hex: '#475569', dark: '#1e293b', border: '#94a3b8' }
     };
 
-    // Bekende SWU Base-mapping op naam zodat zelfs als de API voor een kaart geen setCode of cardNumber meestuurt,
-    // SWUDB altijd het exacte set- en kaartnummer heeft voor het plaatje:
     const KNOWN_SWUDB_MAP = {
       'security complex': { set: 'SOR', num: '019' },
       'capital city': { set: 'SOR', num: '020' },
@@ -814,7 +829,6 @@
     let customUploadedBases = [];
     let isLoadingApiBases = true;
 
-    // Verwijder de oude foutieve cache ('swu_api_bases_cache_v1') waarin alles 'SWU-001' heette
     try {
       localStorage.removeItem('swu_api_bases_cache_v1');
       const savedCustom = localStorage.getItem('swu_custom_bases_v2');
@@ -884,7 +898,6 @@
       return 'Neutral';
     }
 
-    // Haal alle mogelijke afbeeldings-URLs uit het JSON-object van de API
     function extractAllImageUrlsFromApiCard(c) {
       const urls = [];
       const directFields = [
@@ -913,7 +926,6 @@
         }
       });
 
-      // Scan ook eventuele andere velden in het object op directe .png/.webp/.jpg links (zoals cdn.starwarsunlimited.com of swudb.com)
       Object.values(c).forEach(val => {
         if (typeof val === 'string' && val.startsWith('http') && /\.(png|webp|jpg|jpeg)(\?|$)/i.test(val)) {
           urls.push(val.trim());
@@ -939,7 +951,6 @@
       let setCode = '';
       let numStr = '';
 
-      // 1. Check collector_number / collectorNumber (bijv. "SOR_019" of "SOR-019")
       const collectorRaw = String(c.collector_number || c.collectorNumber || c.code || c.cardId || c.slug || '');
       const collectorMatch = collectorRaw.match(/^([A-Za-z0-9]{2,5})[_-](\d{1,4})/);
       if (collectorMatch) {
@@ -947,7 +958,6 @@
         numStr = collectorMatch[2];
       }
 
-      // 2. Check expliciete setCode / set_code / set velden (vermijd [object Object])
       if (!setCode) {
         const rawSetCandidates = [
           c.setCode,
@@ -968,7 +978,6 @@
         }
       }
 
-      // 3. Check expliciete kaartnummer velden
       if (!numStr) {
         const rawNumCandidates = [
           c.cardNumber,
@@ -989,7 +998,6 @@
         }
       }
 
-      // 4. Fallback op bekende SWUDB-kaarttabel als de API voor deze kaart geen set/nummer gaf
       const known = KNOWN_SWUDB_MAP[(cardName || '').toLowerCase()];
       if ((!setCode || setCode === 'SWU') && known) {
         setCode = known.set;
@@ -1008,7 +1016,6 @@
       const cardType = String(c.type || c.Type || c.cardType || 'base').toLowerCase();
       if (cardType && !cardType.includes('base')) return null;
 
-      // Sla Hyperspace/Foil/Showcase dubbelingen over als variantOf is ingevuld
       if (c.variantOf !== undefined && c.variantOf !== null) return null;
       const variantType = String(c.variantType || c.variant || c.VariantType || 'Normal').toLowerCase();
       const isSpecialVariant = variantType.includes('hyperspace') || variantType.includes('foil') || variantType.includes('showcase');
@@ -1025,7 +1032,6 @@
       const planet = extractPlanetFromApiCard(c);
       const apiImages = extractAllImageUrlsFromApiCard(c);
 
-      // Gegarandeerd uniek ID per Base zodat selecteren in het menu altijd de juiste Base pakt!
       const slugName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const uniqueId = numPadded
         ? `${setCode}-${numPadded}-${slugName}`
@@ -1054,7 +1060,6 @@
         urls.push(base.apiImg);
       }
 
-      // Check ook of de naam in KNOWN_SWUDB_MAP staat voor directe SWUDB-afbeeldingen
       const known = KNOWN_SWUDB_MAP[(base.name || '').toLowerCase()];
       const effSet = (base.set && base.set !== 'SWU' && base.set !== 'CUSTOM' && base.set !== 'FILE')
         ? String(base.set).toUpperCase()
@@ -1067,7 +1072,6 @@
         const setLower = effSet.toLowerCase();
         const numInt = parseInt(effNum, 10);
 
-        // SWUDB (https://swudb.com/search/type:Base) afbeeldings-CDN's
         urls.push(`https://swudb.com/images/cards/${effSet}/${effNum}.png`);
         urls.push(`https://swudb.com/cdn-cgi/image/width=600/images/cards/${effSet}/${effNum}.png`);
         if (!isNaN(numInt)) {
@@ -1128,7 +1132,6 @@
           const normalized = normalizeApiCardToBase(raw, idx);
           if (!normalized) return;
 
-          // Unieke sleutel op set + naam + planeet zodat elke unieke Base bewaard blijft
           const uniqueKey = `${normalized.set}::${normalized.name.toLowerCase()}::${normalized.planet.toLowerCase()}`;
           const existing = byKey.get(uniqueKey);
 
@@ -1154,11 +1157,9 @@
             localStorage.setItem('swu_api_bases_cache_v2', JSON.stringify(apiBasesList));
           } catch (e) {}
 
-          // Koppel spelers aan hun gekozen Base (of geef elke speler een eigen start-base als zijn oude ID niet meer bestaat)
           state.players.forEach((p, idx) => {
             let match = allBases.find(b => b.id === p.baseId);
             if (!match && p.baseId) {
-              // Probeer op set-nummer prefix te matchen (bijv. 'SOR-028')
               const prefix = String(p.baseId).split('-').slice(0, 2).join('-').toUpperCase();
               match = allBases.find(b => `${b.set}-${b.num}`.toUpperCase() === prefix);
             }
@@ -1191,6 +1192,10 @@
     // ============================================================================
     // 2. SPELSTATUS, SPELERS, ROTATIE & MOBIELE TOPBAR-VERBERGFUNCTIE
     // ============================================================================
+    function isPremierMode() {
+      return state.playerCount === 2;
+    }
+
     function isLandscapeScreen() {
       return window.innerWidth > window.innerHeight;
     }
@@ -1238,6 +1243,9 @@
 
     function getDefaultRotationsForMode(count) {
       const landscape = isLandscapeScreen();
+      if (count === 2) {
+        return landscape ? [90, -90] : [180, 0];
+      }
       if (count === 3) {
         return landscape ? [180, 180, 0] : [90, -90, 0];
       }
@@ -1655,13 +1663,14 @@
     }
 
     // ============================================================================
-    // 3. TWIN SUNS TOKEN CLAIM & PASS LOGICA
+    // 3. TOKEN CLAIM & PASS LOGICA (1V1 PREMIER & TWIN SUNS)
     // ============================================================================
     function claimToken(playerId, tokenType) {
       const activePlayers = state.players.slice(0, state.playerCount);
       const player = activePlayers[playerId];
       if (!player) return;
 
+      // Toggle eigen token weer uit als je er nogmaals op tikt
       if (player.claimedToken === tokenType && tokenType !== 'pass') {
         player.claimedToken = null;
         saveState();
@@ -1680,7 +1689,7 @@
 
       player.claimedToken = tokenType;
 
-      if (tokenType === 'blast') {
+      if (tokenType === 'blast' && !isPremierMode()) {
         activePlayers.forEach(other => {
           if (other.id !== playerId) {
             other.damage += 1;
@@ -1724,16 +1733,14 @@
     // 4. RENDERING VAN SPELERS EN FLIKKERVRIJE DOM-UPDATES (88:63 RATIO)
     // ============================================================================
     function buildTokenButtonsHtml(player, activePlayers) {
+      const premier = isPremierMode();
       const takenTokens = {
         init: activePlayers.find(p => p.claimedToken === 'init')?.id ?? null,
         blast: activePlayers.find(p => p.claimedToken === 'blast')?.id ?? null,
         plan: activePlayers.find(p => p.claimedToken === 'plan')?.id ?? null
       };
-      const allThreeMainTokensTaken =
-        takenTokens.init !== null && takenTokens.blast !== null && takenTokens.plan !== null;
 
       const hasClaimedAny = player.claimedToken !== null;
-      const showPassBtn = !hasClaimedAny && allThreeMainTokensTaken;
       const hadPrevInit = state.previousInitPlayerId === player.id;
 
       const makeTokenBtn = (type, label) => {
@@ -1762,6 +1769,38 @@
         >${label}</button>`;
       };
 
+      // In 1v1 Premier: Alleen Initiative en Pass
+      if (premier) {
+        const initTakenByOpponent = takenTokens.init !== null && takenTokens.init !== player.id;
+        let passBtnHtml = '';
+
+        if (player.claimedToken === 'pass') {
+          passBtnHtml = `<button
+            onclick="event.stopPropagation(); playerClaimTogglePass(${player.id})"
+            class="token-btn-ui rounded-md sw-font font-extrabold uppercase tracking-wider bg-emerald-400 text-slate-950 border border-emerald-200 shadow-lg"
+          >Pass</button>`;
+        } else if (!hasClaimedAny) {
+          passBtnHtml = `<button
+            onclick="event.stopPropagation(); claimToken(${player.id}, 'pass')"
+            class="token-btn-ui rounded-md sw-font font-extrabold uppercase tracking-wider transition border ${
+              initTakenByOpponent
+                ? 'bg-emerald-400 text-slate-950 border-emerald-200 shadow-lg animate-pulse'
+                : 'bg-slate-950/85 hover:bg-slate-900 text-slate-100 border-white/25'
+            }"
+          >Pass</button>`;
+        }
+
+        return `
+          ${makeTokenBtn('init', 'Initiative')}
+          ${passBtnHtml}
+        `;
+      }
+
+      // In 3P, 4P, 5P Twin Suns: Init, Blast, Plan & Pass
+      const allThreeMainTokensTaken =
+        takenTokens.init !== null && takenTokens.blast !== null && takenTokens.plan !== null;
+      const showPassBtn = !hasClaimedAny && allThreeMainTokensTaken;
+
       const passBtnHtml = showPassBtn
         ? `<button
             onclick="event.stopPropagation(); claimToken(${player.id}, 'pass')"
@@ -1779,11 +1818,22 @@
       `;
     }
 
+    function playerClaimTogglePass(playerId) {
+      const p = state.players[playerId];
+      if (!p) return;
+      if (p.claimedToken === 'pass') {
+        p.claimedToken = null;
+        saveState();
+        updatePlayersDOM();
+      }
+    }
+
     function renderPlayers() {
       const grid = document.getElementById('playersGrid');
       if (!grid) return;
 
       const activePlayers = state.players.slice(0, state.playerCount);
+      const premier = isPremierMode();
 
       if (grid.children.length === state.playerCount && grid.className === `grid-${state.playerCount}p`) {
         updatePlayersDOM();
@@ -1852,12 +1902,12 @@
                     id="btnL1-${player.id}"
                     onclick="event.stopPropagation(); toggleAbility(${player.id}, 'l1')"
                     class="ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l1 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}"
-                    title="Leader 1 Epic Action gebruikt"
-                  >L1</button>
+                    title="${premier ? 'Leader Epic Action gebruikt' : 'Leader 1 Epic Action gebruikt'}"
+                  >${premier ? 'LEADER' : 'L1'}</button>
                   <button
                     id="btnL2-${player.id}"
                     onclick="event.stopPropagation(); toggleAbility(${player.id}, 'l2')"
-                    class="ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l2 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}"
+                    class="${premier ? 'hidden' : ''} ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l2 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}"
                     title="Leader 2 Epic Action gebruikt"
                   >L2</button>
                   <button
@@ -1893,7 +1943,7 @@
                 </div>
               </div>
 
-              <!-- ONDERSTE BALK: TWIN SUNS TOKENS -->
+              <!-- ONDERSTE BALK: TOKENS (1V1 PREMIER OF TWIN SUNS) -->
               <div id="tokenBar-${player.id}" class="token-bar-ui relative z-20 flex items-center justify-center w-full pointer-events-auto">
                 ${buildTokenButtonsHtml(player, activePlayers)}
               </div>
@@ -1913,6 +1963,7 @@
       }
 
       const activePlayers = state.players.slice(0, state.playerCount);
+      const premier = isPremierMode();
 
       activePlayers.forEach(player => {
         const base = getBaseById(player.baseId);
@@ -1967,12 +2018,14 @@
 
         const btnL1 = document.getElementById(`btnL1-${player.id}`);
         if (btnL1) {
+          btnL1.textContent = premier ? 'LEADER' : 'L1';
+          btnL1.title = premier ? 'Leader Epic Action gebruikt' : 'Leader 1 Epic Action gebruikt';
           btnL1.className = `ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l1 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}`;
         }
 
         const btnL2 = document.getElementById(`btnL2-${player.id}`);
         if (btnL2) {
-          btnL2.className = `ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l2 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}`;
+          btnL2.className = `${premier ? 'hidden' : ''} ability-btn-ui rounded font-extrabold border transition leading-tight ${player.l2 ? 'bg-emerald-500 text-slate-950 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.75)]' : 'bg-slate-950/85 text-slate-300 border-white/20 hover:bg-slate-900'}`;
         }
 
         const tokenBar = document.getElementById(`tokenBar-${player.id}`);
@@ -2092,6 +2145,12 @@
       for (let i = 0; i < count; i++) {
         state.players[i].rotation = rots[i];
       }
+      // Reset niet-relevante Twin Suns tokens als er naar 2P Premier wordt gewisseld
+      state.players.forEach(p => {
+        if (count === 2 && (p.claimedToken === 'blast' || p.claimedToken === 'plan')) {
+          p.claimedToken = null;
+        }
+      });
       if (state.previousInitPlayerId >= count) {
         state.previousInitPlayerId = 0;
       }
@@ -2140,13 +2199,20 @@
     }
 
     function renderMenuModalContent() {
-      [3, 4, 5].forEach(c => {
+      const titleEl = document.getElementById('menuModalHeaderTitle');
+      if (titleEl) {
+        titleEl.textContent = isPremierMode()
+          ? 'Star Wars: Unlimited — 1v1 Premier'
+          : 'Star Wars: Unlimited — Twin Suns';
+      }
+
+      [2, 3, 4, 5].forEach(c => {
         const btn = document.getElementById(`btnCount${c}`);
         if (!btn) return;
         if (state.playerCount === c) {
-          btn.className = 'py-2.5 rounded-lg font-bold text-xs border transition bg-amber-400 text-slate-950 border-amber-300';
+          btn.className = 'py-2.5 px-2 rounded-lg font-bold text-xs border transition bg-amber-400 text-slate-950 border-amber-300';
         } else {
-          btn.className = 'py-2.5 rounded-lg font-bold text-xs border transition bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
+          btn.className = 'py-2.5 px-2 rounded-lg font-bold text-xs border transition bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
         }
       });
 
